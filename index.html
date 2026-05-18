@@ -496,12 +496,12 @@
     let currentQ = 0;
     let currentOptionsIndices = [];
     
-    // 몬스터 정보 (스테이지별)
+    // 몬스터 정보 (스테이지별) - 스테이지 3 드래곤 maxHp를 25에서 22로 변경
     const stageInfo = [
         {}, // 0인덱스 무시
         { name: '슬라임', lvl: 1, maxHp: 12, svg: '#svg-slime', qType: 'idiom_complete' }, // Stage 1
         { name: '오크', lvl: 5, maxHp: 20, svg: '#svg-orc', qType: 'meaning' }, // Stage 2
-        { name: '보스 드래곤', lvl: 99, maxHp: 25, svg: '#svg-dragon', qType: 'situation' } // Stage 3
+        { name: '보스 드래곤', lvl: 99, maxHp: 22, svg: '#svg-dragon', qType: 'situation' } // Stage 3
     ];
     let monster = { hp: 15, maxHp: 15, name: '', svg: '' };
 
@@ -626,7 +626,6 @@
             btns[i].style.visibility = 'visible'; 
             btns[i].dataset.correct = (options[i] === correctAnswer);
             
-            // ⭐ 수정: 문자열 'true'와 명확히 비교하여 오답 인덱스를 확실히 저장
             if (btns[i].dataset.correct !== 'true') {
                 currentOptionsIndices.push(i);
             }
@@ -752,7 +751,6 @@
             case 2: activeBuffs.shield = 2; showTextEffect(document.getElementById('player-sprite'), "보호막 전개!"); break;
             case 3: player.hp = Math.min(player.maxHp, player.hp + 2); showTextEffect(document.getElementById('player-sprite'), "HP 회복!"); break;
             case 4: 
-                // ⭐ 수정: currentOptionsIndices 를 활용하여 확실히 오답 2개를 가립니다.
                 if (currentOptionsIndices.length >= 2) {
                     const btns = document.getElementById('options-area').getElementsByTagName('button');
                     let toHide = shuffle([...currentOptionsIndices]).slice(0, 2);
