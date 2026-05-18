@@ -142,7 +142,8 @@
         
         /* 몬스터 진영 (우측 상단) */
         .monster-station { position: absolute; top: 20px; right: 20px; z-index: 5; display: flex; flex-direction: column; align-items: center; }
-        .monster-sprite { width: 120px; height: 120px; filter: drop-shadow(0 5px 0 rgba(0,0,0,0.2)); transition: transform 0.2s; }
+        /* 애니메이션 충돌 방지를 위해 transition 제외 */
+        .monster-sprite { width: 120px; height: 120px; filter: drop-shadow(0 5px 0 rgba(0,0,0,0.2)); }
         
         /* 몬스터 HUD (좌측 상단) */
         .hud-monster {
@@ -153,8 +154,7 @@
 
         /* 플레이어 진영 (좌측 하단) */
         .player-station { position: absolute; bottom: 30px; left: 30px; z-index: 5; display: flex; flex-direction: column; align-items: center; }
-        /* 플레이어 뒷모습 연출을 위해 스케일 키우고 위치 조정 */
-        .player-sprite { width: 140px; height: 140px; filter: drop-shadow(0 5px 0 rgba(0,0,0,0.3)); transition: transform 0.2s; transform-origin: bottom center;}
+        .player-sprite { width: 140px; height: 140px; filter: drop-shadow(0 5px 0 rgba(0,0,0,0.3)); transform-origin: bottom center;}
         
         /* 플레이어 HUD (우측 하단) */
         .hud-player {
@@ -172,10 +172,25 @@
         /* 애니메이션 이펙트 */
         @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes attackPlayer { 0% { transform: scale(1) translate(0,0); } 50% { transform: scale(1.2) translate(30px, -30px); } 100% { transform: scale(1) translate(0,0); } }
-        @keyframes attackMonster { 0% { transform: translate(0,0); } 50% { transform: translate(-30px, 30px); } 100% { transform: translate(0,0); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); filter: brightness(1); } 25% { transform: translateX(-10px); filter: brightness(2) invert(1); } 75% { transform: translateX(10px); filter: brightness(2) invert(1); } }
+        
+        /* 역동적인 전투 애니메이션 */
+        @keyframes attackPlayer { 
+            0% { transform: scale(1) translate(0,0); } 
+            50% { transform: scale(1.3) translate(60px, -60px); } 
+            100% { transform: scale(1) translate(0,0); } 
+        }
+        @keyframes attackMonster { 
+            0% { transform: translate(0,0); } 
+            50% { transform: translate(-60px, 60px) scale(1.2); } 
+            100% { transform: translate(0,0); } 
+        }
+        @keyframes shake { 
+            0%, 100% { transform: translateX(0); filter: brightness(1); } 
+            25% { transform: translateX(-10px) rotate(-5deg); filter: brightness(2) invert(1); } 
+            75% { transform: translateX(10px) rotate(5deg); filter: brightness(2) invert(1); } 
+        }
         @keyframes itemUse { 0% { transform: scale(0.5); opacity: 1; } 50% { transform: scale(2); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+        @keyframes pop { 0% { transform: scale(0.2); opacity: 1; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
 
         .anim-float { animation: float 2s infinite ease-in-out; }
         .anim-atk-p { animation: attackPlayer 0.3s ease; }
@@ -283,6 +298,12 @@
             <path d="M 40 70 Q 50 80 60 70" fill="none" stroke="#fff" stroke-width="4"/>
             <polygon points="35,15 45,25 25,25" fill="#f39c12"/>
             <polygon points="65,15 75,25 55,25" fill="#f39c12"/> <!-- 뿔 -->
+        </g>
+        
+        <!-- 타격 이펙트 -->
+        <g id="svg-hit">
+            <path d="M 50 10 L 60 40 L 90 50 L 60 60 L 50 90 L 40 60 L 10 50 L 40 40 Z" fill="#e74c3c"/>
+            <path d="M 50 20 L 55 45 L 80 50 L 55 55 L 50 80 L 45 55 L 20 50 L 45 45 Z" fill="#f1c40f"/>
         </g>
 
         <!-- 아이템들 -->
@@ -480,7 +501,7 @@
         {}, // 0인덱스 무시
         { name: '슬라임', lvl: 1, maxHp: 12, svg: '#svg-slime', qType: 'idiom_complete' }, // Stage 1
         { name: '오크', lvl: 5, maxHp: 20, svg: '#svg-orc', qType: 'meaning' }, // Stage 2
-        { name: '보스 드래곤', lvl: 99, maxHp: 30, svg: '#svg-dragon', qType: 'situation' } // Stage 3
+        { name: '보스 드래곤', lvl: 99, maxHp: 25, svg: '#svg-dragon', qType: 'situation' } // Stage 3
     ];
     let monster = { hp: 15, maxHp: 15, name: '', svg: '' };
 
@@ -538,7 +559,7 @@
         currentQ = 0; 
         player.combo = 0;
         
-        // ⭐ 수정됨: 스테이지(또는 재도전) 진입 시 체력을 100% 가득 채움
+        // 스테이지 진입 시 체력을 100% 가득 채움
         player.hp = player.maxHp; 
         
         activeBuffs = { scoreDouble: 0, doubleDamage: 0, shield: 0 };
@@ -604,10 +625,31 @@
             btns[i].disabled = false;
             btns[i].style.visibility = 'visible'; 
             btns[i].dataset.correct = (options[i] === correctAnswer);
-            if(!btns[i].dataset.correct) currentOptionsIndices.push(i);
+            
+            // ⭐ 수정: 문자열 'true'와 명확히 비교하여 오답 인덱스를 확실히 저장
+            if (btns[i].dataset.correct !== 'true') {
+                currentOptionsIndices.push(i);
+            }
         }
 
         document.getElementById('progress-bar').style.width = `${(currentQ / 20) * 100}%`;
+    }
+
+    // 타격(히트) 시각 이펙트
+    function showHitEffect(targetId) {
+        const target = document.getElementById(targetId);
+        const rect = target.getBoundingClientRect();
+        const hit = document.createElement('div');
+        hit.style.position = 'absolute';
+        hit.style.width = '80px';
+        hit.style.height = '80px';
+        hit.style.left = `${rect.left + rect.width/2 - 40}px`;
+        hit.style.top = `${rect.top + rect.height/2 - 40}px`;
+        hit.style.zIndex = 150;
+        hit.style.pointerEvents = 'none';
+        hit.innerHTML = `<svg viewBox="0 0 100 100" style="animation: pop 0.3s forwards"><use href="#svg-hit"></use></svg>`;
+        document.body.appendChild(hit);
+        setTimeout(() => hit.remove(), 300);
     }
 
     function checkAnswer(btnIndex) {
@@ -630,17 +672,20 @@
             // 아이템 획득 (3콤보마다 확정, 그 외 20% 확률)
             if (player.combo % 3 === 0 || Math.random() < 0.2) { grantItem(); }
             
-            // 내 공격 애니메이션 및 데미지
+            // 내 공격 모션 시작
             playAnim('player-sprite', 'anim-atk-p');
             let dmg = 1;
             if (activeBuffs.doubleDamage > 0) { 
                 dmg = 2; activeBuffs.doubleDamage = 0; 
-                showTextEffect(document.getElementById('monster-sprite'), "크리티컬!!", '#e74c3c');
             }
+            
+            // 모션의 타격 타이밍(150ms)에 맞추어 몬스터의 HP 감소 및 피격 이펙트 발생
             setTimeout(() => {
+                showHitEffect('monster-sprite'); // 타격 이펙트
                 monster.hp = Math.max(0, monster.hp - dmg);
-                playAnim('monster-sprite', 'anim-shake');
+                playAnim('monster-sprite', 'anim-shake'); // 흔들림 애니메이션
                 updateUI();
+                if (dmg === 2) showTextEffect(document.getElementById('monster-sprite'), "크리티컬!!", '#e74c3c');
             }, 150);
 
         } else {
@@ -648,16 +693,18 @@
             player.combo = 0; // 콤보 초기화
             for(let b of btns) { if(b.dataset.correct === 'true') b.className = 'correct-btn'; }
 
-            // 몬스터 공격
+            // 몬스터 공격 모션 시작
             playAnim('monster-sprite', 'anim-atk-m');
+            
             setTimeout(() => {
                 if (activeBuffs.shield > 0) {
                     showTextEffect(document.getElementById('player-sprite'), "방어 성공!", '#3498db');
                 } else {
                     // 패널티 로직
+                    showHitEffect('player-sprite'); // 플레이어 피격 이펙트
                     player.score = Math.max(0, player.score - 10);
                     player.hp--;
-                    playAnim('player-sprite', 'anim-shake');
+                    playAnim('player-sprite', 'anim-shake'); // 흔들림 애니메이션
                     showTextEffect(document.getElementById('player-sprite'), "-10점 (오답)", '#e74c3c');
                 }
                 updateUI();
@@ -705,11 +752,16 @@
             case 2: activeBuffs.shield = 2; showTextEffect(document.getElementById('player-sprite'), "보호막 전개!"); break;
             case 3: player.hp = Math.min(player.maxHp, player.hp + 2); showTextEffect(document.getElementById('player-sprite'), "HP 회복!"); break;
             case 4: 
+                // ⭐ 수정: currentOptionsIndices 를 활용하여 확실히 오답 2개를 가립니다.
                 if (currentOptionsIndices.length >= 2) {
                     const btns = document.getElementById('options-area').getElementsByTagName('button');
                     let toHide = shuffle([...currentOptionsIndices]).slice(0, 2);
-                    toHide.forEach(idx => btns[idx].style.visibility = 'hidden');
+                    toHide.forEach(idx => {
+                        btns[idx].style.visibility = 'hidden';
+                    });
                     showTextEffect(document.getElementById('player-sprite'), "오답 제거!");
+                } else {
+                    showTextEffect(document.getElementById('player-sprite'), "이미 오답이 없습니다!");
                 }
                 break;
             case 5: 
@@ -720,6 +772,7 @@
             case 7: 
                 monster.hp = Math.max(0, monster.hp - 3);
                 playAnim('monster-sprite', 'anim-shake');
+                showHitEffect('monster-sprite');
                 showTextEffect(document.getElementById('monster-sprite'), "폭발 데미지!");
                 break;
             case 8: player.score += 100; showTextEffect(document.getElementById('player-sprite'), "+100점 획득!"); break;
@@ -737,13 +790,12 @@
         for(let i=0; i<5; i++) {
             const slot = document.getElementById(`slot-${i}`);
             if (i < player.items.length) {
-                // ⭐ 수정됨: 아이템을 보유 중일 때 슬롯에 data-tooltip 속성을 넣어 호버 시 툴팁이 보이게 함
                 const itemDef = itemsInfo[player.items[i]];
                 slot.innerHTML = `<svg viewBox="0 0 100 100"><use href="${itemDef.svg}"></use></svg>`;
                 slot.setAttribute('data-tooltip', `[${itemDef.name}] ${itemDef.desc}`);
             } else { 
                 slot.innerHTML = ''; 
-                slot.removeAttribute('data-tooltip'); // 슬롯이 비었을 땐 툴팁 삭제
+                slot.removeAttribute('data-tooltip');
             }
         }
 
