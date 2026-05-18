@@ -57,6 +57,42 @@
         }
         .item-slot:hover { transform: scale(1.1); border-color: #f1c40f; background: rgba(255,255,255,0.2); }
         .item-slot svg { width: 30px; height: 30px; }
+
+        /* 아이템 툴팁 (Hover 설명) */
+        .item-slot[data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: 130%; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(44, 62, 80, 0.95);
+            color: #f1c40f;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, top 0.2s;
+            z-index: 1000;
+            border: 2px solid #f39c12;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            line-height: 1.4;
+        }
+        .item-slot[data-tooltip]::before {
+            content: '';
+            position: absolute;
+            top: 100%; left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: transparent transparent #f39c12 transparent;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .item-slot[data-tooltip]:hover::after { opacity: 1; top: 120%; }
+        .item-slot[data-tooltip]:hover::before { opacity: 1; }
         
         #active-buffs { display: flex; gap: 10px; min-height: 18px; font-size: 12px; color: #00ffcc; }
 
@@ -409,12 +445,12 @@
 
     let allWords = [];
     
-    // 아이템 SVG 레퍼런스
+    // 아이템 SVG 레퍼런스 및 툴팁 정보
     const itemsInfo = {
         0: { id: 'hat', svg: '#item-hat', name: '지혜의 모자', desc: '3문제 동안 획득 점수 2배!' },
         1: { id: 'sword', svg: '#item-sword', name: '용기의 검', desc: '다음 정답 시 보스 데미지 2배!' },
-        2: { id: 'shield', svg: '#item-shield', name: '인내의 방패', desc: '2문제 동안 오답 HP/점수 방어!' },
-        3: { id: 'armor', svg: '#item-armor', name: '치유의 갑옷', desc: '내 체력(HP) 2칸 회복!' },
+        2: { id: 'shield', svg: '#item-shield', name: '인내의 방패', desc: '2문제 동안 오답 시 HP 방어!' },
+        3: { id: 'armor', svg: '#item-armor', name: '치유의 갑옷', desc: '내 체력(HP) 2칸 즉시 회복!' },
         4: { id: 'wings', svg: '#item-wings', name: '요정의 날개', desc: '오답 보기 2개 즉시 제거!' },
         5: { id: 'wand', svg: '#item-wand', name: '마법 지팡이', desc: '현재 문제 즉시 정답 처리!' },
         6: { id: 'apple', svg: '#item-apple', name: '황금 사과', desc: '최대 체력 +1 및 전부 회복!' },
@@ -501,6 +537,10 @@
         questions = shuffle([...allWords]).slice(0, 20);
         currentQ = 0; 
         player.combo = 0;
+        
+        // ⭐ 수정됨: 스테이지(또는 재도전) 진입 시 체력을 100% 가득 채움
+        player.hp = player.maxHp; 
+        
         activeBuffs = { scoreDouble: 0, doubleDamage: 0, shield: 0 };
 
         document.getElementById('stage-title').innerText = `Stage ${stage} / 3`;
@@ -697,8 +737,14 @@
         for(let i=0; i<5; i++) {
             const slot = document.getElementById(`slot-${i}`);
             if (i < player.items.length) {
-                slot.innerHTML = `<svg viewBox="0 0 100 100"><use href="${itemsInfo[player.items[i]].svg}"></use></svg>`;
-            } else { slot.innerHTML = ''; }
+                // ⭐ 수정됨: 아이템을 보유 중일 때 슬롯에 data-tooltip 속성을 넣어 호버 시 툴팁이 보이게 함
+                const itemDef = itemsInfo[player.items[i]];
+                slot.innerHTML = `<svg viewBox="0 0 100 100"><use href="${itemDef.svg}"></use></svg>`;
+                slot.setAttribute('data-tooltip', `[${itemDef.name}] ${itemDef.desc}`);
+            } else { 
+                slot.innerHTML = ''; 
+                slot.removeAttribute('data-tooltip'); // 슬롯이 비었을 땐 툴팁 삭제
+            }
         }
 
         let buffTexts = [];
