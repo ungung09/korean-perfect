@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>관용표현 마스터 RPG</title>
     <style>
-        /* 픽셀 폰트 로드 */
         @import url('https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@1.530/neodgm/style.css');
 
         :root {
@@ -16,114 +15,78 @@
             --accent: #e74c3c;
             --text-dark: #2c3e50;
             --border: 4px solid #34495e;
-            --btn-bg: #bdc3c7;
-            --btn-hover: #95a5a6;
+            --hud-bg: #fdf6e3;
             --hp-green: #2ecc71;
             --hp-red: #e74c3c;
+            --ui-gray: #bdc3c7;
         }
 
-        * {
-            box-sizing: border-box;
-            font-family: 'NeoDunggeunmo', 'DungGeunMo', sans-serif;
-            user-select: none;
-        }
+        * { box-sizing: border-box; font-family: 'NeoDunggeunmo', 'DungGeunMo', sans-serif; user-select: none; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-dark);
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: var(--bg-color); color: var(--text-dark);
+            margin: 0; padding: 10px; display: flex; justify-content: center; align-items: center;
             min-height: 100vh;
         }
 
         #game-container {
-            width: 100%;
-            max-width: 600px;
-            background: var(--container-bg);
-            border: var(--border);
-            border-radius: 12px;
+            width: 100%; max-width: 600px; background: var(--container-bg);
+            border: var(--border); border-radius: 12px;
             box-shadow: 0px 10px 30px rgba(0,0,0,0.5);
-            overflow: hidden;
-            position: relative;
-            min-height: 750px;
-            display: flex;
-            flex-direction: column;
+            overflow: hidden; position: relative; min-height: 750px; display: flex; flex-direction: column;
         }
 
-        /* 씬(화면) 관리 */
-        .scene {
-            display: none;
-            flex-direction: column;
-            padding: 20px;
-            flex-grow: 1;
-            animation: fadeIn 0.5s;
-        }
+        .scene { display: none; flex-direction: column; padding: 20px; flex-grow: 1; animation: fadeIn 0.3s; }
         .scene.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* 공통 헤더 */
+        /* 상단 UI (점수, 콤보, 인벤토리) */
         #top-bar {
-            background: #34495e;
-            color: white;
-            padding: 10px 15px;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            border-bottom: var(--border);
+            background: #34495e; color: white; padding: 10px 15px;
+            display: none; flex-direction: column; gap: 8px; border-bottom: var(--border);
         }
-
-        .stats-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 16px;
-        }
-
-        .progress-container {
-            width: 100%; height: 12px;
-            background: #2c3e50;
-            border: 2px solid #7f8c8d;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-        #progress-bar {
-            height: 100%; width: 0%;
-            background: #f1c40f;
-            transition: width 0.3s ease-out;
-        }
-
-        /* 인벤토리 & 버프 영역 */
-        #inventory-area {
-            display: flex; flex-direction: column; align-items: center; width: 100%;
-        }
-        #inventory { display: flex; gap: 8px; }
-        .item-slot {
-            width: 36px; height: 36px;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.4);
-            border-radius: 6px;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 22px; cursor: pointer;
-            transition: all 0.2s; position: relative;
-        }
-        .item-slot:hover {
-            background: rgba(255,255,255,0.3); transform: scale(1.1); border-color: #f1c40f;
-        }
-        .item-hint { font-size: 12px; color: #f1c40f; margin-top: 5px; text-shadow: 1px 1px 0 #000; }
+        .stats-row { display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+        .combo-text { color: #f1c40f; font-weight: bold; font-size: 18px; animation: pulse 0.5s infinite alternate; }
         
-        #active-buffs {
-            display: flex; gap: 10px; margin-top: 5px; min-height: 20px; font-size: 12px; color: #00ffcc;
+        #inventory-area { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        #inventory { display: flex; gap: 8px; margin-bottom: 5px;}
+        .item-slot {
+            width: 40px; height: 40px; background: rgba(0,0,0,0.3); border: 2px solid #7f8c8d;
+            border-radius: 6px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: transform 0.1s; position: relative;
         }
+        .item-slot:hover { transform: scale(1.1); border-color: #f1c40f; background: rgba(255,255,255,0.2); }
+        .item-slot svg { width: 30px; height: 30px; }
+        
+        #active-buffs { display: flex; gap: 10px; min-height: 18px; font-size: 12px; color: #00ffcc; }
 
-        /* 버튼 */
+        /* 로그인 & 캐릭터 선택 화면 */
+        .title-box { text-align: center; margin-top: 10px; margin-bottom: 20px;}
+        .title-box h1 { color: var(--primary-dark); text-shadow: 2px 2px 0 var(--ui-gray); font-size: 32px; margin: 0;}
+        
+        .char-select-container {
+            display: flex; justify-content: space-around; background: white;
+            border: var(--border); border-radius: 8px; padding: 15px 10px; margin-bottom: 15px;
+        }
+        .char-option {
+            display: flex; flex-direction: column; align-items: center; cursor: pointer;
+            padding: 10px; border: 2px solid transparent; border-radius: 8px; opacity: 0.6; transition: all 0.2s;
+        }
+        .char-option.selected { border-color: var(--primary); opacity: 1; background: #e0f7fa; transform: scale(1.05); }
+        .char-option svg { width: 60px; height: 60px; margin-bottom: 5px; }
+
+        .login-wrapper { display: flex; gap: 15px; justify-content: center; align-items: stretch; flex-wrap: wrap; }
+        .login-form-area, .login-ranking-area { flex: 1; min-width: 240px; background: white; border: var(--border); border-radius: 8px; padding: 15px; }
+        .login-form { display: flex; flex-direction: column; gap: 10px; }
+        input { padding: 10px; font-size: 18px; border: 2px solid var(--ui-gray); border-radius: 5px; text-align: center; }
+        
+        .login-ranking-list { overflow-y: auto; max-height: 120px; font-size: 14px; margin-top: 10px;}
+        .ranking-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--ui-gray); }
+
         button {
             background: var(--btn-bg); border: 3px solid #7f8c8d; border-radius: 8px;
             padding: 12px; font-size: 16px; cursor: pointer;
-            box-shadow: 0 4px 0 #7f8c8d; transition: all 0.1s;
-            color: var(--text-dark); margin-bottom: 10px; word-break: keep-all;
+            box-shadow: 0 4px 0 #7f8c8d; transition: all 0.1s; color: var(--text-dark); margin-bottom: 10px;
         }
         button:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 #7f8c8d; }
         button.action-btn { background: #f39c12; border-color: #d35400; box-shadow: 0 4px 0 #d35400; color: white; font-weight: bold;}
@@ -132,112 +95,172 @@
         button.correct-btn { background: #2ecc71; color: white; border-color: #27ae60; box-shadow: 0 4px 0 #27ae60;}
         button:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        /* 로그인 & 랭킹 */
-        .title-box { text-align: center; margin-bottom: 20px; margin-top: 20px; }
-        .title-box h1 { color: var(--primary-dark); text-shadow: 2px 2px 0 #bdc3c7; font-size: 34px; margin: 0; line-height: 1.2; }
-        .login-wrapper { display: flex; gap: 15px; justify-content: center; align-items: stretch; flex-wrap: wrap; }
-        .login-form-area, .login-ranking-area {
-            flex: 1; min-width: 240px; background: white; border: var(--border); border-radius: 8px; padding: 15px;
-        }
-        .login-form { display: flex; flex-direction: column; gap: 10px; }
-        input { padding: 10px; font-size: 18px; border: 2px solid #bdc3c7; border-radius: 5px; text-align: center; }
-        .login-ranking-list { flex-grow: 1; overflow-y: auto; max-height: 150px; font-size: 14px; }
-        .ranking-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #bdc3c7; }
-
-        /* 게임 전투 영역 */
+        /* 포켓몬 스타일 전투 영역 */
         .battle-area {
-            flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative;
-            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            flex-grow: 1; display: flex; flex-direction: column; position: relative;
+            background: linear-gradient(to bottom, #74b9ff 0%, #a29bfe 100%);
             border: var(--border); border-radius: 8px; margin-bottom: 15px; overflow: hidden;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
         }
-        .battle-ground {
-            position: absolute; bottom: 0; width: 100%; height: 30%; background: #27ae60;
-            border-top: 4px solid #2ecc71;
-        }
+        .battle-ground-top { position: absolute; top: 110px; right: 10px; width: 160px; height: 50px; background: #55efc4; border-radius: 50%; border: 3px solid #00b894; z-index: 1;}
+        .battle-ground-bottom { position: absolute; bottom: 30px; left: 10px; width: 200px; height: 70px; background: #55efc4; border-radius: 50%; border: 3px solid #00b894; z-index: 1;}
         
-        /* 캐릭터 디자인 고도화 */
-        .character-wrapper { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; }
-        .character { font-size: 70px; position: relative; transition: all 0.2s; filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.2)); }
-        .monster { font-size: 80px; position: relative; transition: all 0.2s; filter: drop-shadow(0 0 10px rgba(231,76,60,0.5)); }
+        /* 몬스터 진영 (우측 상단) */
+        .monster-station { position: absolute; top: 20px; right: 20px; z-index: 5; display: flex; flex-direction: column; align-items: center; }
+        .monster-sprite { width: 120px; height: 120px; filter: drop-shadow(0 5px 0 rgba(0,0,0,0.2)); transition: transform 0.2s; }
         
-        .char-item { position: absolute; font-size: 35px; }
-        .item-hat { top: -25px; left: 15px; filter: drop-shadow(1px 1px 0px #000); }
-        .item-sword { top: 20px; right: -30px; transform: rotate(45deg); z-index: 2;}
-        .item-shield { top: 20px; left: -25px; z-index: 2;}
-        .item-armor { top: 40px; left: 15px; font-size: 45px; z-index: -1; }
-        .item-wings { top: 10px; left: -40px; font-size: 90px; z-index: -2; opacity: 0.8; }
-        .item-wand { top: 10px; right: -40px; font-size: 45px; z-index: 3; }
-        .item-apple { top: 50px; left: 30px; font-size: 25px; z-index: 4; }
-        .item-bomb { bottom: -10px; right: 20px; font-size: 35px; z-index: 4; }
-        .item-coin { top: -40px; right: 0px; font-size: 30px; animation: float 1.5s infinite; }
-
-        /* 상태 이상(버프) 이펙트 */
-        .shield-aura {
-            position: absolute; width: 120px; height: 120px; top: -10px; left: -25px;
-            border-radius: 50%; border: 4px solid rgba(52, 152, 219, 0.6);
-            background: radial-gradient(circle, rgba(52,152,219,0.2) 0%, rgba(52,152,219,0) 70%);
-            animation: pulseAura 1.5s infinite; z-index: 5; display: none; pointer-events: none;
+        /* 몬스터 HUD (좌측 상단) */
+        .hud-monster {
+            position: absolute; top: 15px; left: 15px; width: 180px; background: var(--hud-bg);
+            border: 3px solid #34495e; border-radius: 8px 0 8px 8px; padding: 8px; z-index: 10;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
         }
 
-        /* HP 바 */
-        .hp-bar-container {
-            width: 100px; height: 12px; background: #2c3e50; border: 2px solid white;
-            border-radius: 6px; margin-bottom: 10px; position: relative; z-index: 20;
+        /* 플레이어 진영 (좌측 하단) */
+        .player-station { position: absolute; bottom: 30px; left: 30px; z-index: 5; display: flex; flex-direction: column; align-items: center; }
+        /* 플레이어 뒷모습 연출을 위해 스케일 키우고 위치 조정 */
+        .player-sprite { width: 140px; height: 140px; filter: drop-shadow(0 5px 0 rgba(0,0,0,0.3)); transition: transform 0.2s; transform-origin: bottom center;}
+        
+        /* 플레이어 HUD (우측 하단) */
+        .hud-player {
+            position: absolute; bottom: 20px; right: 15px; width: 190px; background: var(--hud-bg);
+            border: 3px solid #34495e; border-radius: 8px 0 8px 8px; padding: 8px; z-index: 10;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
         }
+
+        /* HUD 내부 구성 */
+        .hud-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; display: flex; justify-content: space-between;}
+        .hp-bar-container { width: 100%; height: 10px; background: #2c3e50; border: 2px solid #7f8c8d; border-radius: 5px; position: relative; }
         .hp-bar { height: 100%; background: var(--hp-green); width: 100%; transition: width 0.3s, background-color 0.3s; }
+        .hp-text { font-size: 12px; text-align: right; margin-top: 3px; font-weight: bold;}
 
-        /* 애니메이션 */
-        @keyframes pulseAura { 0% { transform: scale(0.9); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.9); opacity: 0.5; } }
-        @keyframes attackRight { 0% { transform: translateX(0); } 50% { transform: translateX(50px) scale(1.2); } 100% { transform: translateX(0); } }
-        @keyframes attackLeft { 0% { transform: translateX(0); } 50% { transform: translateX(-50px) scale(1.2); } 100% { transform: translateX(0); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); filter: brightness(1); } 25% { transform: translateX(-15px); filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); } 75% { transform: translateX(15px); filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(5); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        @keyframes bossEnrage { 0% { transform: scale(1); filter: drop-shadow(0 0 0 red); } 50% { transform: scale(1.5); filter: drop-shadow(0 0 30px red); } 100% { transform: scale(1.3); filter: drop-shadow(0 0 15px red); } }
+        /* 애니메이션 이펙트 */
+        @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes attackPlayer { 0% { transform: scale(1) translate(0,0); } 50% { transform: scale(1.2) translate(30px, -30px); } 100% { transform: scale(1) translate(0,0); } }
+        @keyframes attackMonster { 0% { transform: translate(0,0); } 50% { transform: translate(-30px, 30px); } 100% { transform: translate(0,0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); filter: brightness(1); } 25% { transform: translateX(-10px); filter: brightness(2) invert(1); } 75% { transform: translateX(10px); filter: brightness(2) invert(1); } }
+        @keyframes itemUse { 0% { transform: scale(0.5); opacity: 1; } 50% { transform: scale(2); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
 
-        .anim-attack-right { animation: attackRight 0.3s ease; }
-        .anim-attack-left { animation: attackLeft 0.3s ease; }
-        .anim-shake { animation: shake 0.3s ease; }
         .anim-float { animation: float 2s infinite ease-in-out; }
-        .anim-enrage { animation: bossEnrage 1s forwards; }
+        .anim-atk-p { animation: attackPlayer 0.3s ease; }
+        .anim-atk-m { animation: attackMonster 0.3s ease; }
+        .anim-shake { animation: shake 0.4s ease; }
 
-        /* 문제 영역 */
+        /* 화면 중앙 이펙트 캔버스 */
+        #effect-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 100; display: flex; justify-content: center; align-items: center;
+        }
+        .center-effect-icon { position: absolute; width: 100px; height: 100px; animation: itemUse 0.8s forwards; }
+
+        /* 문제 영역 (대화창 스타일) */
         .question-box {
             background: white; border: var(--border); border-radius: 8px; padding: 15px;
             text-align: center; font-size: 18px; margin-bottom: 15px; min-height: 80px;
             display: flex; align-items: center; justify-content: center; line-height: 1.4;
-            box-shadow: 0 4px 0 #bdc3c7;
+            box-shadow: 0 4px 0 var(--ui-gray); border-radius: 8px; position: relative;
+        }
+        /* 대화창 꼬리표 */
+        .question-box::before {
+            content: ''; position: absolute; top: -15px; left: 40px;
+            border-width: 0 10px 15px 10px; border-style: solid;
+            border-color: transparent transparent var(--ui-gray) transparent;
+        }
+        .question-box::after {
+            content: ''; position: absolute; top: -10px; left: 40px;
+            border-width: 0 10px 15px 10px; border-style: solid;
+            border-color: transparent transparent white transparent;
         }
         .highlight { color: var(--accent); font-weight: bold; font-size: 20px;}
 
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-        /* 이펙트 텍스트 */
         .effect-text {
-            position: absolute; font-size: 26px; font-weight: bold; color: #ffeb3b;
-            text-shadow: 2px 2px 0 #d32f2f, -1px -1px 0 #d32f2f, 1px -1px 0 #d32f2f, -1px 1px 0 #d32f2f;
-            pointer-events: none; animation: floatUp 1s forwards; z-index: 100; text-align: center;
+            position: absolute; font-size: 28px; font-weight: bold; color: #ffeb3b;
+            text-shadow: 2px 2px 0 #d32f2f, -2px -2px 0 #d32f2f, 2px -2px 0 #d32f2f, -2px 2px 0 #d32f2f;
+            pointer-events: none; animation: floatUp 1s forwards; z-index: 200; text-align: center;
         }
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            50% { transform: translateY(-40px) scale(1.3); opacity: 1; }
-            100% { transform: translateY(-60px) scale(1); opacity: 0; }
-        }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80px) scale(1.5); opacity: 0; } }
 
-        /* 보상 팝업 */
-        #reward-popup {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(44, 62, 80, 0.95); color: white; padding: 25px;
-            border-radius: 12px; border: 4px solid #f1c40f; text-align: center;
-            z-index: 200; display: none; box-shadow: 0 0 30px rgba(0,0,0,0.8); width: 80%;
-        }
-        #reward-popup span { font-size: 70px; display: block; margin-bottom: 10px; animation: float 1s infinite; filter: drop-shadow(0 0 10px gold);}
-        #reward-desc { font-size: 14px; color: #bdc3c7; margin-top: 10px; line-height: 1.4;}
-
-        .hidden-option { visibility: hidden; pointer-events: none; }
     </style>
 </head>
 <body>
+
+<!-- SVG 에셋 (인라인) -->
+<svg style="display:none;">
+    <defs>
+        <!-- 캐릭터: 전사 -->
+        <g id="svg-warrior">
+            <rect x="35" y="40" width="30" height="40" fill="#95a5a6" rx="5"/> <!-- 몸통 -->
+            <rect x="40" y="80" width="8" height="15" fill="#7f8c8d"/><rect x="52" y="80" width="8" height="15" fill="#7f8c8d"/> <!-- 다리 -->
+            <circle cx="50" cy="25" r="20" fill="#ecf0f1"/> <!-- 머리 -->
+            <path d="M 30 25 Q 50 0 70 25 L 65 30 L 35 30 Z" fill="#bdc3c7"/> <!-- 투구 -->
+            <rect x="45" y="5" width="10" height="20" fill="#e74c3c"/> <!-- 깃털 -->
+            <circle cx="43" cy="25" r="3" fill="#2c3e50"/><circle cx="57" cy="25" r="3" fill="#2c3e50"/> <!-- 눈 -->
+            <rect x="20" y="45" width="40" height="8" fill="#bdc3c7" transform="rotate(-45 30 45)"/> <!-- 검 -->
+            <circle cx="70" cy="60" r="15" fill="#f39c12" stroke="#d35400" stroke-width="4"/> <!-- 방패 -->
+        </g>
+        <!-- 캐릭터: 마법사 -->
+        <g id="svg-mage">
+            <path d="M 30 90 L 40 40 L 60 40 L 70 90 Z" fill="#3498db"/> <!-- 망토 -->
+            <circle cx="50" cy="30" r="18" fill="#f1c40f"/> <!-- 얼굴 -->
+            <path d="M 20 30 L 50 0 L 80 30 Z" fill="#2980b9"/> <!-- 모자 -->
+            <path d="M 15 30 L 85 30 L 80 35 L 20 35 Z" fill="#2980b9"/> <!-- 모자챙 -->
+            <circle cx="43" cy="30" r="3" fill="#2c3e50"/><circle cx="57" cy="30" r="3" fill="#2c3e50"/> <!-- 눈 -->
+            <rect x="75" y="30" width="6" height="50" fill="#8e44ad"/> <!-- 지팡이 -->
+            <circle cx="78" cy="25" r="8" fill="#9b59b6"/> <!-- 지팡이 구슬 -->
+        </g>
+        <!-- 캐릭터: 궁수 -->
+        <g id="svg-archer">
+            <rect x="35" y="45" width="30" height="35" fill="#2ecc71" rx="5"/> <!-- 몸통 -->
+            <rect x="40" y="80" width="8" height="15" fill="#8e44ad"/><rect x="52" y="80" width="8" height="15" fill="#8e44ad"/> <!-- 다리 -->
+            <circle cx="50" cy="30" r="18" fill="#f39c12"/> <!-- 얼굴 -->
+            <path d="M 30 35 Q 50 5 70 35 Q 50 15 30 35" fill="#27ae60"/> <!-- 후드 -->
+            <circle cx="43" cy="30" r="3" fill="#2c3e50"/><circle cx="57" cy="30" r="3" fill="#2c3e50"/> <!-- 눈 -->
+            <path d="M 25 40 Q 10 60 25 80" fill="none" stroke="#e67e22" stroke-width="4"/> <!-- 활 -->
+            <line x1="25" y1="40" x2="25" y2="80" stroke="#ecf0f1" stroke-width="2"/> <!-- 활시위 -->
+            <line x1="15" y1="60" x2="45" y2="60" stroke="#bdc3c7" stroke-width="3"/> <!-- 화살 -->
+        </g>
+
+        <!-- 몬스터 1: 슬라임 -->
+        <g id="svg-slime">
+            <path d="M 20 80 Q 50 10 80 80 Q 80 95 50 95 Q 20 95 20 80" fill="#1abc9c"/>
+            <circle cx="40" cy="65" r="5" fill="#fff"/><circle cx="60" cy="65" r="5" fill="#fff"/>
+            <circle cx="40" cy="65" r="2" fill="#000"/><circle cx="60" cy="65" r="2" fill="#000"/>
+        </g>
+        <!-- 몬스터 2: 오크 -->
+        <g id="svg-orc">
+            <circle cx="50" cy="40" r="30" fill="#27ae60"/>
+            <rect x="25" y="70" width="50" height="30" fill="#c0392b" rx="10"/>
+            <circle cx="35" cy="35" r="5" fill="#fff"/><circle cx="65" cy="35" r="5" fill="#fff"/>
+            <circle cx="35" cy="35" r="2" fill="#e74c3c"/><circle cx="65" cy="35" r="2" fill="#e74c3c"/>
+            <path d="M 40 55 Q 50 65 60 55" fill="none" stroke="#000" stroke-width="3"/>
+            <path d="M 40 55 L 45 45 L 45 55 Z" fill="#fff"/><path d="M 60 55 L 55 45 L 55 55 Z" fill="#fff"/> <!-- 이빨 -->
+            <rect x="80" y="20" width="10" height="70" fill="#7f8c8d" transform="rotate(20 85 55)"/> <!-- 몽둥이 -->
+        </g>
+        <!-- 몬스터 3: 드래곤 -->
+        <g id="svg-dragon">
+            <circle cx="50" cy="50" r="40" fill="#c0392b"/>
+            <path d="M 10 50 Q -10 20 30 40 Z" fill="#e74c3c"/> <!-- 좌날개 -->
+            <path d="M 90 50 Q 110 20 70 40 Z" fill="#e74c3c"/> <!-- 우날개 -->
+            <circle cx="35" cy="40" r="8" fill="#f1c40f"/><circle cx="65" cy="40" r="8" fill="#f1c40f"/>
+            <path d="M 40 70 Q 50 80 60 70" fill="none" stroke="#fff" stroke-width="4"/>
+            <polygon points="35,15 45,25 25,25" fill="#f39c12"/>
+            <polygon points="65,15 75,25 55,25" fill="#f39c12"/> <!-- 뿔 -->
+        </g>
+
+        <!-- 아이템들 -->
+        <g id="item-hat"><path d="M 10 80 L 50 20 L 90 80 Z" fill="#8e44ad"/><path d="M 0 80 L 100 80 L 90 90 L 10 90 Z" fill="#8e44ad"/></g>
+        <g id="item-sword"><rect x="45" y="10" width="10" height="60" fill="#bdc3c7"/><rect x="30" y="70" width="40" height="10" fill="#f1c40f"/><rect x="45" y="80" width="10" height="20" fill="#e67e22"/></g>
+        <g id="item-shield"><path d="M 10 10 L 90 10 L 90 60 Q 50 100 10 60 Z" fill="#3498db" stroke="#f1c40f" stroke-width="5"/></g>
+        <g id="item-armor"><rect x="20" y="20" width="60" height="70" fill="#2ecc71" rx="10"/><circle cx="50" cy="45" r="15" fill="#fff"/><path d="M 50 35 L 55 45 L 65 45 L 57 52 L 60 62 L 50 55 L 40 62 L 43 52 L 35 45 L 45 45 Z" fill="#f1c40f"/></g>
+        <g id="item-wings"><path d="M 50 50 Q 10 10 10 50 Q 10 90 50 50" fill="#fff" opacity="0.8"/><path d="M 50 50 Q 90 10 90 50 Q 90 90 50 50" fill="#fff" opacity="0.8"/></g>
+        <g id="item-wand"><rect x="45" y="20" width="10" height="70" fill="#8e44ad"/><polygon points="50,0 65,15 50,30 35,15" fill="#f1c40f"/></g>
+        <g id="item-apple"><circle cx="50" cy="60" r="35" fill="#e74c3c"/><path d="M 50 25 Q 60 10 70 20" fill="none" stroke="#27ae60" stroke-width="8"/></g>
+        <g id="item-bomb"><circle cx="50" cy="60" r="35" fill="#2c3e50"/><rect x="40" y="15" width="20" height="15" fill="#7f8c8d"/><path d="M 50 15 Q 60 0 70 10" fill="none" stroke="#e67e22" stroke-width="4"/></g>
+        <g id="item-coin"><circle cx="50" cy="50" r="40" fill="#f1c40f"/><circle cx="50" cy="50" r="30" fill="none" stroke="#f39c12" stroke-width="4"/><text x="50" y="65" font-size="40" text-anchor="middle" fill="#d35400" font-weight="bold">$</text></g>
+    </defs>
+</svg>
 
 <div id="game-container">
     
@@ -246,34 +269,48 @@
         <div class="stats-row">
             <span id="stage-title">Stage 1</span>
             <span id="score-display">점수: 0</span>
-            <span id="q-counter">0/30</span>
+            <span id="combo-display" class="combo-text">0 Combo!</span>
+        </div>
+        <div class="progress-container">
+            <div id="progress-bar"></div>
         </div>
         <div id="inventory-area">
             <div id="inventory">
+                <!-- 슬롯 5개 -->
                 <div class="item-slot" id="slot-0" onclick="useItem(0)"></div>
                 <div class="item-slot" id="slot-1" onclick="useItem(1)"></div>
                 <div class="item-slot" id="slot-2" onclick="useItem(2)"></div>
                 <div class="item-slot" id="slot-3" onclick="useItem(3)"></div>
                 <div class="item-slot" id="slot-4" onclick="useItem(4)"></div>
             </div>
-            <div class="item-hint">아이템을 누르면 특별한 버프가 발동됩니다!</div>
-            <div id="active-buffs"></div>
-        </div>
-        <div class="progress-container">
-            <div id="progress-bar"></div>
+            <div id="active-buffs">아이템을 눌러 효과를 발동하세요!</div>
         </div>
     </div>
 
-    <!-- 로그인 화면 -->
+    <!-- 로그인 & 캐릭터 선택 화면 -->
     <div id="scene-login" class="scene active">
         <div class="title-box">
             <h1>관용표현<br>마스터 RPG</h1>
-            <p style="font-size: 60px; margin: 15px 0;">🧑‍🎓⚔️🐉</p>
         </div>
         
+        <h3 style="text-align:center; margin:0 0 10px 0; color:var(--text-dark);">나의 직업 선택</h3>
+        <div class="char-select-container">
+            <div class="char-option selected" onclick="selectChar(0)" id="char-opt-0">
+                <svg viewBox="0 0 100 100"><use href="#svg-warrior"></use></svg>
+                <span>전사</span>
+            </div>
+            <div class="char-option" onclick="selectChar(1)" id="char-opt-1">
+                <svg viewBox="0 0 100 100"><use href="#svg-mage"></use></svg>
+                <span>마법사</span>
+            </div>
+            <div class="char-option" onclick="selectChar(2)" id="char-opt-2">
+                <svg viewBox="0 0 100 100"><use href="#svg-archer"></use></svg>
+                <span>궁수</span>
+            </div>
+        </div>
+
         <div class="login-wrapper">
             <div class="login-form-area">
-                <h3 style="margin-top: 0; text-align: center; color: var(--primary-dark);">게임 참가</h3>
                 <div class="login-form">
                     <input type="number" id="input-class" placeholder="몇 반? (숫자)" required>
                     <input type="number" id="input-number" placeholder="몇 번? (숫자)" required>
@@ -284,88 +321,53 @@
             <div class="login-ranking-area">
                 <h3 style="margin-top: 0; text-align: center; color: var(--accent);">🏆 명예의 전당</h3>
                 <div id="login-ranking-list" class="login-ranking-list">
-                    <div style="text-align:center; padding: 20px;">랭킹을 불러오는 중...</div>
+                    <div style="text-align:center; padding: 10px;">랭킹 불러오는 중...</div>
                 </div>
             </div>
         </div>
-        <p style="text-align: center; font-size: 12px; color: #7f8c8d; margin-top: 20px;">
-            ※ 구글 시트의 1행에는 반드시 제목(헤더)이 있어야 합니다.
-        </p>
     </div>
 
     <!-- 로딩 화면 -->
     <div id="scene-loading" class="scene" style="justify-content: center; align-items: center;">
-        <h2 class="anim-float" style="color: var(--primary-dark);">데이터를 마법책에서<br>불러오는 중... 📖</h2>
+        <h2 class="anim-float" style="color: var(--primary-dark);">마법의 단어장<br>소환 중... 📖</h2>
     </div>
 
-    <!-- 게임 화면 -->
+    <!-- 게임 포켓몬 전투 화면 -->
     <div id="scene-game" class="scene">
         <div class="battle-area" id="battle-area">
-            <div class="battle-ground"></div>
+            <!-- 배경 타원 -->
+            <div class="battle-ground-top"></div>
+            <div class="battle-ground-bottom"></div>
             
-            <!-- Stage 1 뷰 -->
-            <div id="stage1-view" style="display:none; width: 100%; height: 100%; justify-content: center; align-items: center; z-index: 10;">
-                <div class="character-wrapper">
-                    <div class="character anim-float" id="player-char-s1">
-                        🧑‍🎓
-                        <div id="eq-hat" class="char-item item-hat" style="display:none;">🎓</div>
-                        <div id="eq-sword" class="char-item item-sword" style="display:none;">⚔️</div>
-                        <div id="eq-shield" class="char-item item-shield" style="display:none;">🛡️</div>
-                        <div id="eq-armor" class="char-item item-armor" style="display:none;">💖</div>
-                        <div id="eq-wings" class="char-item item-wings" style="display:none;">🧚</div>
-                        <div id="eq-wand" class="char-item item-wand" style="display:none;">🪄</div>
-                        <div id="eq-apple" class="char-item item-apple" style="display:none;">🍎</div>
-                        <div id="eq-bomb" class="char-item item-bomb" style="display:none;">💣</div>
-                        <div id="eq-coin" class="char-item item-coin" style="display:none;">🪙</div>
-                    </div>
-                </div>
+            <!-- 이펙트 레이어 (중앙) -->
+            <div id="effect-layer"></div>
+
+            <!-- 몬스터 영역 (Top Right + Top Left HUD) -->
+            <div class="hud-monster">
+                <div class="hud-name"><span id="monster-name">슬라임</span><span>Lv.<span id="monster-lvl">1</span></span></div>
+                <div class="hp-bar-container"><div class="hp-bar" id="monster-hp"></div></div>
+                <div class="hp-text"><span id="monster-hp-txt">15</span> / <span id="monster-maxhp-txt">15</span></div>
+            </div>
+            <div class="monster-station">
+                <svg class="monster-sprite anim-float" id="monster-sprite" viewBox="0 0 100 100">
+                    <use href="#svg-slime"></use>
+                </svg>
             </div>
 
-            <!-- Stage 2, 3 전투 뷰 -->
-            <div id="battle-view" style="display:none; width: 100%; height: 100%; justify-content: space-around; align-items: center; z-index: 10;">
-                <div class="character-wrapper">
-                    <div class="hp-bar-container"><div class="hp-bar" id="player-hp"></div></div>
-                    <div class="character anim-float" id="player-char-battle">
-                        <div class="shield-aura" id="player-shield-aura"></div>
-                        🧑‍🎓
-                        <div id="eq-hat-b" class="char-item item-hat" style="display:none;">🎓</div>
-                        <div id="eq-sword-b" class="char-item item-sword" style="display:none;">⚔️</div>
-                        <div id="eq-shield-b" class="char-item item-shield" style="display:none;">🛡️</div>
-                        <div id="eq-armor-b" class="char-item item-armor" style="display:none;">💖</div>
-                        <div id="eq-wings-b" class="char-item item-wings" style="display:none;">🧚</div>
-                        <div id="eq-wand-b" class="char-item item-wand" style="display:none;">🪄</div>
-                        <div id="eq-apple-b" class="char-item item-apple" style="display:none;">🍎</div>
-                        <div id="eq-bomb-b" class="char-item item-bomb" style="display:none;">💣</div>
-                        <div id="eq-coin-b" class="char-item item-coin" style="display:none;">🪙</div>
-                    </div>
-                </div>
+            <!-- 플레이어 영역 (Bottom Left + Bottom Right HUD) -->
+            <div class="player-station">
+                <svg class="player-sprite" id="player-sprite" viewBox="0 0 100 100">
+                    <use href="#svg-warrior"></use>
+                </svg>
             </div>
-
-            <!-- Stage 2, 3 전투 뷰 -->
-            <div id="battle-view" style="display:none; width: 100%; height: 100%; justify-content: space-around; align-items: center; z-index: 10;">
-                <div class="character-wrapper">
-                    <div class="hp-bar-container"><div class="hp-bar" id="player-hp"></div></div>
-                    <div class="character anim-float" id="player-char-battle">
-                        <div class="shield-aura" id="player-shield-aura"></div>
-                        🧑‍🎓
-                        <div id="eq-hat-b" class="char-item item-hat" style="display:none;">🎓</div>
-                        <div id="eq-sword-b" class="char-item item-sword" style="display:none;">⚔️</div>
-                        <div id="eq-shield-b" class="char-item item-shield" style="display:none;">🛡️</div>
-                        <div id="eq-armor-b" class="char-item item-armor" style="display:none;">💖</div>
-                        <div id="eq-wings-b" class="char-item item-wings" style="display:none;">🧚</div>
-                    </div>
-                </div>
-                
-                <div style="font-size: 35px; font-weight: bold; color: var(--accent); text-shadow: 2px 2px 0 #fff; z-index: 10;">VS</div>
-                
-                <div class="character-wrapper">
-                    <div class="hp-bar-container"><div class="hp-bar" id="monster-hp"></div></div>
-                    <div class="monster anim-float" id="monster-char">👾</div>
-                </div>
+            <div class="hud-player">
+                <div class="hud-name"><span>내 캐릭터</span><span>HP</span></div>
+                <div class="hp-bar-container"><div class="hp-bar" id="player-hp"></div></div>
+                <div class="hp-text"><span id="player-hp-txt">5</span> / <span id="player-maxhp-txt">5</span></div>
             </div>
         </div>
 
-        <div class="question-box" id="question-text">문제가 표시됩니다.</div>
+        <div class="question-box" id="question-text">야생의 몬스터가 나타났다!</div>
 
         <div class="options-grid" id="options-area">
             <button onclick="checkAnswer(0)"></button>
@@ -377,16 +379,9 @@
 
     <!-- 결과 화면 -->
     <div id="scene-result" class="scene" style="justify-content: center; align-items: center; text-align: center;">
-        <h1 id="result-title" style="color: var(--primary-dark); font-size: 40px; margin-bottom: 10px;">스테이지 클리어!</h1>
+        <h1 id="result-title" style="color: var(--primary-dark); font-size: 40px; margin-bottom: 10px;">결과</h1>
         <p id="result-desc" style="font-size: 18px; margin-bottom: 40px; line-height: 1.5;"></p>
         <button id="result-btn" class="action-btn" style="width: 80%; padding: 15px; font-size: 20px;" onclick="nextStage()">다음 스테이지</button>
-    </div>
-
-    <!-- 보상 팝업 -->
-    <div id="reward-popup">
-        <span id="reward-icon">🎁</span>
-        <h3 id="reward-name" style="margin: 0; color: #f1c40f; font-size: 24px;">아이템 획득!</h3>
-        <p id="reward-desc">아이템 설명</p>
     </div>
 
 </div>
@@ -410,50 +405,49 @@
         {id: 9, idiom: "날개를 얻은 듯", meaning: "매우 기쁘고 만족스러움.", situation: "자유시간을 얻어 날아갈 듯 기쁠 때"},
         {id: 10, idiom: "귀에 못이 박히다", meaning: "같은 말을 여러 번 반복해서 듣다.", situation: "잔소리를 너무 많이 들었을 때"}
     ];
-    // fallbackData 보충 (원활한 플레이를 위해 복사 확장)
     while(fallbackData.length < 40) { fallbackData.push({...fallbackData[Math.floor(Math.random()*10)], id: fallbackData.length+1}); }
 
     let allWords = [];
     
-    // 아이템 정보 및 특성 정의
+    // 아이템 SVG 레퍼런스
     const itemsInfo = {
-        0: { id: 'hat', icon: '🎓', name: '지혜의 모자', desc: '사용 시: 3문제 동안 획득 점수가 2배가 됩니다!' },
-        1: { id: 'sword', icon: '⚔️', name: '용기의 검', desc: '사용 시: 다음 정답 시 몬스터의 체력을 2칸 깎습니다!' },
-        2: { id: 'shield', icon: '🛡️', name: '인내의 방패', desc: '사용 시: 2문제 동안 오답을 골라도 내 HP가 깎이지 않습니다!' },
-        3: { id: 'armor', icon: '💖', name: '치유의 갑옷', desc: '사용 시: 즉시 내 체력(HP)을 2칸 회복합니다!' },
-        4: { id: 'wings', icon: '🧚', name: '요정의 날개', desc: '사용 시: 즉시 현재 문제의 오답 보기 2개를 제거합니다!' },
-        5: { id: 'wand', icon: '🪄', name: '마법 지팡이', desc: '사용 시: 즉시 현재 문제를 정답 처리하고 넘어갑니다!' },
-        6: { id: 'apple', icon: '🍎', name: '황금 사과', desc: '사용 시: 최대 체력(Max HP)이 1칸 늘어나고 모두 회복됩니다!' },
-        7: { id: 'bomb', icon: '💣', name: '마법 폭탄', desc: '사용 시: 즉시 몬스터의 체력을 3칸 깎습니다! (전투 중 사용 가능)' },
-        8: { id: 'coin', icon: '🪙', name: '행운의 동전', desc: '사용 시: 즉시 보너스 100점을 획득합니다!' }
+        0: { id: 'hat', svg: '#item-hat', name: '지혜의 모자', desc: '3문제 동안 획득 점수 2배!' },
+        1: { id: 'sword', svg: '#item-sword', name: '용기의 검', desc: '다음 정답 시 보스 데미지 2배!' },
+        2: { id: 'shield', svg: '#item-shield', name: '인내의 방패', desc: '2문제 동안 오답 HP/점수 방어!' },
+        3: { id: 'armor', svg: '#item-armor', name: '치유의 갑옷', desc: '내 체력(HP) 2칸 회복!' },
+        4: { id: 'wings', svg: '#item-wings', name: '요정의 날개', desc: '오답 보기 2개 즉시 제거!' },
+        5: { id: 'wand', svg: '#item-wand', name: '마법 지팡이', desc: '현재 문제 즉시 정답 처리!' },
+        6: { id: 'apple', svg: '#item-apple', name: '황금 사과', desc: '최대 체력 +1 및 전부 회복!' },
+        7: { id: 'bomb', svg: '#item-bomb', name: '마법 폭탄', desc: '몬스터 체력 즉시 3칸 감소!' },
+        8: { id: 'coin', svg: '#item-coin', name: '행운의 동전', desc: '보너스 100점 즉시 획득!' }
     };
 
+    const charDefs = ['#svg-warrior', '#svg-mage', '#svg-archer'];
+    
     // 게임 상태
     let player = {
-        classNum: 0, studentNum: 0, score: 0,
+        classNum: 0, studentNum: 0, score: 0, combo: 0,
         hp: 5, maxHp: 5,
-        items: [], // 인벤토리 (슬롯)
-        permanentLooks: [] // 1스테이지에서 영구히 얻은 외형
+        items: [],
+        charIndex: 0
     };
     
-    // 활성화된 버프 관리
-    let activeBuffs = {
-        scoreDouble: 0, // 남은 턴(문제) 수
-        doubleDamage: 0, 
-        shield: 0
-    };
+    let activeBuffs = { scoreDouble: 0, doubleDamage: 0, shield: 0 };
 
     let stage = 1;
     let questions = [];
     let currentQ = 0;
-    let correctCount = 0;
-    let currentOptionsIndices = []; // 날개 아이템을 위해 버튼 인덱스 추적
+    let currentOptionsIndices = [];
     
-    // 몬스터
-    let monster = { hp: 30, maxHp: 30, emoji: '👾' };
-    const bosses = ['🧛', '🧌', '🐉'];
+    // 몬스터 정보 (스테이지별)
+    const stageInfo = [
+        {}, // 0인덱스 무시
+        { name: '슬라임', lvl: 1, maxHp: 12, svg: '#svg-slime', qType: 'idiom_complete' }, // Stage 1
+        { name: '오크', lvl: 5, maxHp: 20, svg: '#svg-orc', qType: 'meaning' }, // Stage 2
+        { name: '보스 드래곤', lvl: 99, maxHp: 30, svg: '#svg-dragon', qType: 'situation' } // Stage 3
+    ];
+    let monster = { hp: 15, maxHp: 15, name: '', svg: '' };
 
-    // DOM Elements
     const scenes = {
         login: document.getElementById('scene-login'),
         loading: document.getElementById('scene-loading'),
@@ -461,17 +455,19 @@
         result: document.getElementById('scene-result')
     };
 
-    // 유틸: 셔플
+    function selectChar(index) {
+        player.charIndex = index;
+        document.querySelectorAll('.char-option').forEach((el, i) => {
+            el.classList.toggle('selected', i === index);
+        });
+    }
+
     function shuffle(array) {
         let cur = array.length, rnd;
-        while (cur !== 0) {
-            rnd = Math.floor(Math.random() * cur); cur--;
-            [array[cur], array[rnd]] = [array[rnd], array[cur]];
-        }
+        while (cur !== 0) { rnd = Math.floor(Math.random() * cur); cur--; [array[cur], array[rnd]] = [array[rnd], array[cur]]; }
         return array;
     }
 
-    // 1. 데이터 로드 (시트 연동)
     async function loadData() {
         if (!GAS_URL) { allWords = [...fallbackData]; return; }
         try {
@@ -479,12 +475,9 @@
             const result = await response.json();
             if(result.status === 'success' && result.data.length > 0) { allWords = result.data; } 
             else { allWords = [...fallbackData]; }
-        } catch (e) {
-            console.error(e); allWords = [...fallbackData];
-        }
+        } catch (e) { allWords = [...fallbackData]; }
     }
 
-    // 씬 제어
     function showScene(sceneName) {
         Object.values(scenes).forEach(s => s.classList.remove('active'));
         scenes[sceneName].classList.add('active');
@@ -499,30 +492,31 @@
         
         showScene('loading');
         await loadData();
-        stage = 1; initStage();
+        stage = 1; 
+        initStage();
     }
 
-    // 2. 스테이지 초기화
     function initStage() {
-        questions = shuffle([...allWords]).slice(0, 30);
-        currentQ = 0; correctCount = 0;
-        
-        // 버프 초기화
+        // 문제 20문제로 세팅
+        questions = shuffle([...allWords]).slice(0, 20);
+        currentQ = 0; 
+        player.combo = 0;
         activeBuffs = { scoreDouble: 0, doubleDamage: 0, shield: 0 };
 
-        document.getElementById('stage-title').innerText = `Stage ${stage} ${stage===1?'- 훈련':stage===2?'- 실전 전투':'- 보스 레이드'}`;
+        document.getElementById('stage-title').innerText = `Stage ${stage} / 3`;
         
-        document.getElementById('stage1-view').style.display = stage === 1 ? 'flex' : 'none';
-        document.getElementById('battle-view').style.display = stage > 1 ? 'flex' : 'none';
+        // 몬스터 및 플레이어 세팅
+        const mInfo = stageInfo[stage];
+        monster.maxHp = mInfo.maxHp;
+        monster.hp = mInfo.maxHp;
+        monster.name = mInfo.name;
+        monster.svg = mInfo.svg;
+        
+        document.getElementById('monster-name').innerText = monster.name;
+        document.getElementById('monster-lvl').innerText = mInfo.lvl;
+        document.getElementById('monster-sprite').innerHTML = `<use href="${monster.svg}"></use>`;
+        document.getElementById('player-sprite').innerHTML = `<use href="${charDefs[player.charIndex]}"></use>`;
 
-        if (stage > 1) {
-            player.hp = 5; player.maxHp = 5;
-            monster.maxHp = 30; monster.hp = 30;
-            monster.emoji = stage === 2 ? bosses[0] : bosses[2];
-            document.getElementById('monster-char').innerText = monster.emoji;
-            updateHPUI();
-        }
-        
         updateUI();
         showScene('game');
         renderQuestion();
@@ -534,22 +528,22 @@
         return [idiom.substring(0, Math.ceil(idiom.length/2)), idiom.substring(Math.ceil(idiom.length/2))];
     }
 
-    // 3. 문제 렌더링
     function renderQuestion() {
-        if (currentQ >= 30) { handleStageClear(); return; }
+        if (currentQ >= 20 || monster.hp <= 0) { handleStageClear(); return; }
 
         const q = questions[currentQ];
+        const qType = stageInfo[stage].qType;
         let correctAnswer = "", displayQ = "";
 
-        if (stage === 1) {
+        if (qType === 'idiom_complete') {
             const parts = splitIdiom(q.idiom);
-            displayQ = `다음 관용표현을 완성하세요.<br><br><span class="highlight">"${parts[0]} [ ? ]"</span>`;
+            displayQ = `<span style="font-size:14px;color:#7f8c8d;">관용표현 완성하기</span><br><span class="highlight">"${parts[0]} [ ? ]"</span>`;
             correctAnswer = parts[1];
-        } else if (stage === 2) {
-            displayQ = `다음 뜻을 가진 관용표현은?<br><br><span class="highlight">${q.meaning}</span>`;
+        } else if (qType === 'meaning') {
+            displayQ = `<span style="font-size:14px;color:#7f8c8d;">뜻에 맞는 표현 고르기</span><br><span class="highlight">${q.meaning}</span>`;
             correctAnswer = q.idiom;
         } else {
-            displayQ = `다음 상황에 어울리는 관용표현은?<br><br><span class="highlight">${q.situation}</span>`;
+            displayQ = `<span style="font-size:14px;color:#7f8c8d;">상황에 맞는 표현 고르기</span><br><span class="highlight">${q.situation}</span>`;
             correctAnswer = q.idiom;
         }
 
@@ -558,7 +552,7 @@
         let options = [correctAnswer];
         let wrongPool = shuffle(allWords.filter(w => w.id !== q.id));
         for (let i = 0; i < 3; i++) {
-            options.push(stage === 1 ? splitIdiom(wrongPool[i].idiom)[1] : wrongPool[i].idiom);
+            options.push(qType === 'idiom_complete' ? splitIdiom(wrongPool[i].idiom)[1] : wrongPool[i].idiom);
         }
 
         options = shuffle(options);
@@ -568,239 +562,152 @@
             btns[i].innerText = options[i];
             btns[i].className = '';
             btns[i].disabled = false;
-            btns[i].style.visibility = 'visible'; // 날개 아이템 대비 초기화
+            btns[i].style.visibility = 'visible'; 
             btns[i].dataset.correct = (options[i] === correctAnswer);
-            if(!btns[i].dataset.correct) currentOptionsIndices.push(i); // 오답 인덱스 저장
+            if(!btns[i].dataset.correct) currentOptionsIndices.push(i);
         }
 
-        document.getElementById('q-counter').innerText = `${currentQ + 1}/30`;
-        document.getElementById('progress-bar').style.width = `${(currentQ / 30) * 100}%`;
+        document.getElementById('progress-bar').style.width = `${(currentQ / 20) * 100}%`;
     }
 
-    // 4. 정답 확인 및 전투/버프 처리
     function checkAnswer(btnIndex) {
         const btns = document.getElementById('options-area').getElementsByTagName('button');
-        for(let b of btns) b.disabled = true; // 중복 클릭 방지
+        for(let b of btns) b.disabled = true; 
         
         const btn = btns[btnIndex];
         const isCorrect = (btn.dataset.correct === 'true');
 
         if (isCorrect) {
             btn.className = 'correct-btn';
-            correctCount++;
+            player.combo++;
             
-            // 점수 계산 (모자 버프 확인)
-            let earnedScore = 10;
-            if (activeBuffs.scoreDouble > 0) { earnedScore *= 2; }
-            player.score += earnedScore;
-            showEffectText(btn, `+${earnedScore}`);
+            // 점수 계산 (기본 10 + 콤보 보너스) * 아이템 배율
+            let baseScore = 10 + (player.combo * 5);
+            if (activeBuffs.scoreDouble > 0) { baseScore *= 2; }
+            player.score += baseScore;
+            showTextEffect(btn, `+${baseScore} (정답!)`, '#f1c40f');
             
-            // 아이템 드롭 (스테이지1은 확정, 전투는 확률)
-            if (stage === 1 && correctCount % 6 === 0) { grantItem(true); } 
-            else if (stage > 1) { grantItem(false); }
+            // 아이템 획득 (3콤보마다 확정, 그 외 20% 확률)
+            if (player.combo % 3 === 0 || Math.random() < 0.2) { grantItem(); }
             
-            // 전투 데미지 처리
-            if (stage > 1) {
-                document.getElementById('player-char-battle').classList.add('anim-attack-right');
-                setTimeout(() => document.getElementById('player-char-battle').classList.remove('anim-attack-right'), 300);
-                
-                let dmg = 1;
-                if (activeBuffs.doubleDamage > 0) { 
-                    dmg = 2; 
-                    activeBuffs.doubleDamage = 0; // 검 버프 소모
-                    showEffectText(document.getElementById('monster-char'), "크리티컬!");
-                }
-                monster.hp = Math.max(0, monster.hp - dmg);
-                document.getElementById('monster-char').classList.add('anim-shake');
-                setTimeout(() => document.getElementById('monster-char').classList.remove('anim-shake'), 300);
+            // 내 공격 애니메이션 및 데미지
+            playAnim('player-sprite', 'anim-atk-p');
+            let dmg = 1;
+            if (activeBuffs.doubleDamage > 0) { 
+                dmg = 2; activeBuffs.doubleDamage = 0; 
+                showTextEffect(document.getElementById('monster-sprite'), "크리티컬!!", '#e74c3c');
             }
+            setTimeout(() => {
+                monster.hp = Math.max(0, monster.hp - dmg);
+                playAnim('monster-sprite', 'anim-shake');
+                updateUI();
+            }, 150);
 
         } else {
             btn.className = 'wrong-btn';
-            
-            // 오답 시 정답을 초록색으로 표시
+            player.combo = 0; // 콤보 초기화
             for(let b of btns) { if(b.dataset.correct === 'true') b.className = 'correct-btn'; }
 
-            if (stage > 1) {
-                document.getElementById('monster-char').classList.add('anim-attack-left');
-                setTimeout(() => document.getElementById('monster-char').classList.remove('anim-attack-left'), 300);
-                
-                // 방패 버프 확인
+            // 몬스터 공격
+            playAnim('monster-sprite', 'anim-atk-m');
+            setTimeout(() => {
                 if (activeBuffs.shield > 0) {
-                    showEffectText(document.getElementById('player-char-battle'), "방어 성공!");
+                    showTextEffect(document.getElementById('player-sprite'), "방어 성공!", '#3498db');
                 } else {
+                    // 패널티 로직
+                    player.score = Math.max(0, player.score - 10);
                     player.hp--;
-                    document.getElementById('player-char-battle').classList.add('anim-shake');
-                    setTimeout(() => document.getElementById('player-char-battle').classList.remove('anim-shake'), 300);
+                    playAnim('player-sprite', 'anim-shake');
+                    showTextEffect(document.getElementById('player-sprite'), "-10점 (오답)", '#e74c3c');
                 }
-            }
+                updateUI();
+            }, 150);
         }
 
-        // 턴(문제) 경과에 따른 버프 차감
+        // 버프 차감
         if (activeBuffs.scoreDouble > 0) activeBuffs.scoreDouble--;
         if (activeBuffs.shield > 0) activeBuffs.shield--;
 
-        updateUI();
-        
-        if (player.hp <= 0 && stage > 1) {
-            setTimeout(handleGameOver, 1000);
-        } else {
-            currentQ++;
-            setTimeout(renderQuestion, 1200);
-        }
+        setTimeout(() => {
+            if (player.hp <= 0) { handleGameOver(); }
+            else { currentQ++; renderQuestion(); }
+        }, 1200);
     }
 
-    // 5. 아이템 드롭
-    function grantItem(isDeterministic = false) {
+    function grantItem() {
         if (player.items.length >= 5) return;
-        
-        // 20% 확률로 아이템 드롭
-        if (isDeterministic || Math.random() < 0.2) {
-            const randomId = Math.floor(Math.random() * 9); // 아이템 종류 9개로 확장
-            player.items.push(randomId);
-            
-            // 스테이지 1에서는 영구 외형 획득
-            if (stage === 1 && !player.permanentLooks.includes(randomId)) {
-                player.permanentLooks.push(randomId);
-            }
-            
-            const item = itemsInfo[randomId];
-            const popup = document.getElementById('reward-popup');
-            document.getElementById('reward-icon').innerText = item.icon;
-            document.getElementById('reward-name').innerText = `${item.name} 획득!`;
-            document.getElementById('reward-desc').innerText = item.desc;
-            
-            popup.style.display = 'block';
-            setTimeout(() => { popup.style.display = 'none'; }, 2500);
-            updateUI();
-        }
+        const randomId = Math.floor(Math.random() * 9); 
+        player.items.push(randomId);
+        showTextEffect(document.getElementById('player-sprite'), "+아이템 획득!", '#2ecc71');
+        updateUI();
     }
 
-    // 6. 아이템 사용 (버프 발동)
+    // 아이템 효과 애니메이션 (가운데서 퍼짐)
+    function showItemEffectVisual(svgRef) {
+        const layer = document.getElementById('effect-layer');
+        const icon = document.createElement('div');
+        icon.className = 'center-effect-icon';
+        icon.innerHTML = `<svg viewBox="0 0 100 100"><use href="${svgRef}"></use></svg>`;
+        layer.appendChild(icon);
+        setTimeout(() => icon.remove(), 800);
+    }
+
     function useItem(slotIndex) {
         if (slotIndex >= player.items.length) return;
-        
         const itemId = player.items[slotIndex];
         const item = itemsInfo[itemId];
-        const charEl = document.getElementById(stage === 1 ? 'player-char-s1' : 'player-char-battle');
         
-        // 폭탄(7번)은 Stage 1에서 사용 불가 처리
-        if (itemId === 7 && stage === 1) {
-            showEffectText(charEl, "전투 중에만 사용 가능!");
-            return;
-        }
+        showItemEffectVisual(item.svg);
 
-        // 버프 로직
         switch(itemId) {
-            case 0: // 모자 (점수 2배, 3문제)
-                activeBuffs.scoreDouble = 3;
-                showEffectText(charEl, "지혜 상승! (3문제)");
-                break;
-            case 1: // 검 (다음 데미지 2배)
-                activeBuffs.doubleDamage = 1;
-                showEffectText(charEl, "공격력 강화!");
-                break;
-            case 2: // 방패 (무적, 2문제)
-                activeBuffs.shield = 2;
-                showEffectText(charEl, "보호막 전개! (2문제)");
-                break;
-            case 3: // 갑옷 (즉시 회복)
-                if (stage > 1) {
-                    player.hp = Math.min(player.maxHp, player.hp + 2);
-                    updateHPUI();
-                    showEffectText(charEl, "HP 회복!");
-                } else {
-                    showEffectText(charEl, "체력이 든든해졌다!"); // 스테이지1은 HP가 안보이므로 텍스트만
-                }
-                break;
-            case 4: // 날개 (즉시 오답 2개 제거)
+            case 0: activeBuffs.scoreDouble = 3; showTextEffect(document.getElementById('player-sprite'), "점수 2배 버프!"); break;
+            case 1: activeBuffs.doubleDamage = 1; showTextEffect(document.getElementById('player-sprite'), "다음 공격력 2배!"); break;
+            case 2: activeBuffs.shield = 2; showTextEffect(document.getElementById('player-sprite'), "보호막 전개!"); break;
+            case 3: player.hp = Math.min(player.maxHp, player.hp + 2); showTextEffect(document.getElementById('player-sprite'), "HP 회복!"); break;
+            case 4: 
                 if (currentOptionsIndices.length >= 2) {
                     const btns = document.getElementById('options-area').getElementsByTagName('button');
-                    // 오답 3개 중 랜덤으로 2개 숨김
                     let toHide = shuffle([...currentOptionsIndices]).slice(0, 2);
-                    toHide.forEach(idx => {
-                        btns[idx].style.visibility = 'hidden';
-                    });
-                    showEffectText(charEl, "매직 힌트!");
-                } else {
-                    showEffectText(charEl, "이미 정답이 보입니다!");
+                    toHide.forEach(idx => btns[idx].style.visibility = 'hidden');
+                    showTextEffect(document.getElementById('player-sprite'), "오답 제거!");
                 }
                 break;
-            case 5: // 마법 지팡이 (즉시 정답)
+            case 5: 
                 const btns = document.getElementById('options-area').getElementsByTagName('button');
-                for(let i=0; i<4; i++) {
-                    if(btns[i].dataset.correct === 'true') {
-                        showEffectText(charEl, "마법 지팡이 발동!");
-                        checkAnswer(i);
-                        break;
-                    }
-                }
+                for(let i=0; i<4; i++) { if(btns[i].dataset.correct === 'true') { checkAnswer(i); break; } }
                 break;
-            case 6: // 황금 사과 (최대 HP 증가 및 풀피)
-                player.maxHp++;
-                player.hp = player.maxHp;
-                if (stage > 1) updateHPUI();
-                showEffectText(charEl, "최대 체력 증가!");
+            case 6: player.maxHp++; player.hp = player.maxHp; showTextEffect(document.getElementById('player-sprite'), "최대 체력 증가!"); break;
+            case 7: 
+                monster.hp = Math.max(0, monster.hp - 3);
+                playAnim('monster-sprite', 'anim-shake');
+                showTextEffect(document.getElementById('monster-sprite'), "폭발 데미지!");
                 break;
-            case 7: // 마법 폭탄 (몬스터 HP 3 감소)
-                if (stage > 1) {
-                    monster.hp = Math.max(0, monster.hp - 3);
-                    document.getElementById('monster-char').classList.add('anim-shake');
-                    updateHPUI();
-                    showEffectText(document.getElementById('monster-char'), "폭탄 펑! (-3)");
-                }
-                break;
-            case 8: // 행운의 동전 (즉시 100점)
-                player.score += 100;
-                showEffectText(charEl, "+100점 획득!");
-                break;
+            case 8: player.score += 100; showTextEffect(document.getElementById('player-sprite'), "+100점 획득!"); break;
         }
         
-        // 아이템 소모
         player.items.splice(slotIndex, 1);
         updateUI();
     }
 
-    // 7. UI 전반 업데이트
     function updateUI() {
         document.getElementById('score-display').innerText = `점수: ${player.score}`;
+        document.getElementById('combo-display').innerText = `${player.combo} Combo!`;
+        document.getElementById('combo-display').style.display = player.combo > 1 ? 'block' : 'none';
         
-        // 인벤토리 아이콘 업데이트
         for(let i=0; i<5; i++) {
             const slot = document.getElementById(`slot-${i}`);
             if (i < player.items.length) {
-                slot.innerText = itemsInfo[player.items[i]].icon;
-            } else {
-                slot.innerText = '';
-            }
+                slot.innerHTML = `<svg viewBox="0 0 100 100"><use href="${itemsInfo[player.items[i]].svg}"></use></svg>`;
+            } else { slot.innerHTML = ''; }
         }
 
-        // 버프 텍스트 상태 업데이트
         let buffTexts = [];
-        if(activeBuffs.scoreDouble > 0) buffTexts.push(`🎓점수2배(${activeBuffs.scoreDouble})`);
-        if(activeBuffs.doubleDamage > 0) buffTexts.push(`⚔️강공격(대기)`);
-        if(activeBuffs.shield > 0) buffTexts.push(`🛡️보호막(${activeBuffs.shield})`);
-        document.getElementById('active-buffs').innerText = buffTexts.join(' | ');
+        if(activeBuffs.scoreDouble > 0) buffTexts.push(`점수2배(${activeBuffs.scoreDouble}턴)`);
+        if(activeBuffs.doubleDamage > 0) buffTexts.push(`강공격 대기`);
+        if(activeBuffs.shield > 0) buffTexts.push(`보호막(${activeBuffs.shield}턴)`);
+        document.getElementById('active-buffs').innerText = buffTexts.length > 0 ? buffTexts.join(' | ') : "아이템을 눌러 효과 발동!";
 
-        // 보호막 시각 이펙트
-        const shieldAura = document.getElementById('player-shield-aura');
-        if (shieldAura) shieldAura.style.display = activeBuffs.shield > 0 ? 'block' : 'none';
-
-        // 영구 장착 외형 업데이트 (Stage 1에서 얻은 것들)
-        const chars = ['s1', 'battle'];
-        chars.forEach(c => {
-            Object.values(itemsInfo).forEach(item => {
-                const el = document.getElementById(`eq-${item.id}${c === 'battle' ? '-b' : ''}`);
-                if (el) el.style.display = 'none'; // 초기화
-            });
-            player.permanentLooks.forEach(itemId => {
-                const item = itemsInfo[itemId];
-                const el = document.getElementById(`eq-${item.id}${c === 'battle' ? '-b' : ''}`);
-                if (el) el.style.display = 'block';
-            });
-        });
-
-        if (stage > 1) updateHPUI();
+        updateHPUI();
     }
 
     function updateHPUI() {
@@ -809,81 +716,75 @@
         
         pBar.style.width = `${(player.hp / player.maxHp) * 100}%`;
         pBar.style.backgroundColor = (player.hp / player.maxHp) > 0.3 ? 'var(--hp-green)' : 'var(--hp-red)';
-        
+        document.getElementById('player-hp-txt').innerText = player.hp;
+        document.getElementById('player-maxhp-txt').innerText = player.maxHp;
+
         mBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
         mBar.style.backgroundColor = (monster.hp / monster.maxHp) > 0.3 ? 'var(--hp-green)' : 'var(--hp-red)';
+        document.getElementById('monster-hp-txt').innerText = monster.hp;
+        document.getElementById('monster-maxhp-txt').innerText = monster.maxHp;
     }
 
-    function showEffectText(el, text) {
+    function playAnim(elementId, animClass) {
+        const el = document.getElementById(elementId);
+        el.classList.remove(animClass);
+        void el.offsetWidth; // 리플로우 강제 (애니메이션 재시작)
+        el.classList.add(animClass);
+    }
+
+    function showTextEffect(el, text, color) {
         const rect = el.getBoundingClientRect();
         const effect = document.createElement('div');
         effect.className = 'effect-text';
         effect.innerText = text;
-        effect.style.left = `${rect.left + rect.width/2 - 60}px`;
-        effect.style.top = `${rect.top - 20}px`;
+        effect.style.color = color;
+        // HUD 및 요소들의 복잡한 배치로 인해 화면 중앙을 기준으로 상대적 보정 적용
+        effect.style.left = `${rect.left + rect.width/2 - 50}px`;
+        effect.style.top = `${rect.top}px`;
         document.body.appendChild(effect);
         setTimeout(() => effect.remove(), 1000);
     }
 
-    // 8. 게임 오버 및 클리어 처리
     function handleGameOver() {
-        const resTitle = document.getElementById('result-title');
-        const resDesc = document.getElementById('result-desc');
-        const resBtn = document.getElementById('result-btn');
-
-        resTitle.innerText = "전투 불능...";
-        resTitle.style.color = "var(--hp-red)";
-        resDesc.innerText = "HP가 0이 되었습니다.\n걱정마세요! 문제를 섞어서 다시 도전합니다.";
-        resBtn.innerText = "현재 스테이지 다시 시작";
-        resBtn.onclick = () => { showScene('game'); initStage(); };
-
+        document.getElementById('result-title').innerText = "전투 불능...";
+        document.getElementById('result-title').style.color = "var(--hp-red)";
+        document.getElementById('result-desc').innerText = "HP가 0이 되었습니다.\n걱정마세요! 다시 도전할 수 있습니다.";
+        document.getElementById('result-btn').innerText = "스테이지 다시 도전";
+        document.getElementById('result-btn').onclick = () => { showScene('game'); initStage(); };
         showScene('result');
     }
 
     function handleStageClear() {
-        const resTitle = document.getElementById('result-title');
-        const resDesc = document.getElementById('result-desc');
-        const resBtn = document.getElementById('result-btn');
-        resTitle.style.color = "var(--primary-dark)";
-
-        if (stage === 1) {
-            resTitle.innerText = "훈련 수료!";
-            resDesc.innerText = `장비 획득을 완료했습니다.\n이제 본격적으로 몬스터 퇴치에 나섭니다!`;
-            resBtn.innerText = "Stage 2 전투 진입";
-            resBtn.onclick = () => { stage=2; initStage(); };
+        if (monster.hp > 0) {
+            // 20문제를 다 풀었는데 몬스터가 안죽은 경우
+            document.getElementById('result-title').innerText = "턴 종료!";
+            document.getElementById('result-title').style.color = "var(--hp-red)";
+            document.getElementById('result-desc').innerText = "20문제가 끝났지만 몬스터를 쓰러뜨리지 못했습니다!\n아이템을 적극적으로 활용하여 더 많은 데미지를 주세요.";
+            document.getElementById('result-btn').innerText = "스테이지 다시 도전";
+            document.getElementById('result-btn').onclick = () => { showScene('game'); initStage(); };
             showScene('result');
-        } 
-        else if (stage === 2) {
-            resTitle.innerText = "몬스터 격파 성공!";
-            resDesc.innerText = "드디어 최종 보스가 나타났습니다!\n보스는 정답률 90%를 넘겨야만 쓰러집니다.";
-            resBtn.innerText = "Stage 3 최종 보스전";
-            resBtn.onclick = () => { stage=3; initStage(); };
-            showScene('result');
+            return;
         }
-        else if (stage === 3) {
-            if (correctCount >= 27) { // 90%
-                showEnding();
-            } else {
-                document.getElementById('monster-char').classList.add('anim-enrage');
-                setTimeout(() => {
-                    resTitle.innerText = "보스 레이드 실패!";
-                    resTitle.style.color = "var(--hp-red)";
-                    resDesc.innerText = `정답 개수: ${correctCount}/30 (90% 미만)\n보스가 분노하여 공격했습니다. 다시 도전하세요!`;
-                    resBtn.innerText = "보스전 다시 도전";
-                    resBtn.onclick = () => { showScene('game'); initStage(); };
-                    showScene('result');
-                }, 1500);
-            }
+
+        // 몬스터 처치 성공
+        if (stage < 3) {
+            document.getElementById('result-title').innerText = "몬스터 처치!";
+            document.getElementById('result-title').style.color = "var(--primary-dark)";
+            document.getElementById('result-desc').innerText = `성공적으로 ${monster.name}을(를) 물리쳤습니다!\n다음 몬스터에게 도전하세요.`;
+            document.getElementById('result-btn').innerText = `Stage ${stage+1} 도전`;
+            document.getElementById('result-btn').onclick = () => { stage++; initStage(); };
+            showScene('result');
+        } else {
+            // 게임 클리어 (스테이지 3 보스 처치)
+            showEnding();
         }
     }
 
-    // 9. 엔딩 및 랭킹 시스템
     async function showEnding() {
-        document.getElementById('result-title').innerText = "🎉 대승리! 🎉";
-        document.getElementById('result-desc').innerHTML = `관용표현 마스터가 되었습니다!<br>최종 점수: <span style="color:var(--accent); font-weight:bold; font-size:24px;">${player.score}점</span>`;
+        document.getElementById('result-title').innerText = "🎉 드래곤 처치 성공! 🎉";
+        document.getElementById('result-desc').innerHTML = `마스터 칭호를 획득했습니다!<br>나의 콤보와 노력의 결실:<br><span style="color:var(--accent); font-weight:bold; font-size:30px;">${player.score}점</span>`;
         document.getElementById('result-btn').innerText = "랭킹 등록 및 처음으로";
         
-        // 버튼 클릭 시 랭킹 서버로 전송
         document.getElementById('result-btn').onclick = async () => {
             document.getElementById('result-btn').disabled = true;
             document.getElementById('result-btn').innerText = "기록 저장 중...";
@@ -893,14 +794,13 @@
                         method: 'POST',
                         body: JSON.stringify({ classNum: player.classNum, studentNum: player.studentNum, score: player.score })
                     });
-                } catch(e) { console.error("기록 저장 실패"); }
+                } catch(e) {}
             }
             location.reload();
         };
         showScene('result');
     }
 
-    // 로그인 화면 진입 시 랭킹 로드
     async function loadInitialRankings() {
         const rankList = document.getElementById('login-ranking-list');
         if (GAS_URL) {
@@ -912,13 +812,13 @@
                     result.data.forEach((r, idx) => {
                         rankList.innerHTML += `<div class="ranking-item"><span>${idx + 1}등. ${r.classNum}반 ${r.studentNum}번</span><span>${r.score}점</span></div>`;
                     });
-                } else { rankList.innerHTML = '<div style="text-align:center; padding: 20px;">아직 기록이 없습니다. (1등에 도전하세요!)</div>'; }
-            } catch (e) { rankList.innerHTML = '<div style="text-align:center; padding: 20px; color:#e74c3c;">서버와 연결할 수 없습니다.<br>(URL이나 권한을 확인하세요)</div>'; }
+                } else { rankList.innerHTML = '<div style="text-align:center; padding: 10px;">아직 기록이 없습니다.</div>'; }
+            } catch (e) { rankList.innerHTML = '<div style="text-align:center; padding: 10px; color:#e74c3c;">서버에 연결할 수 없습니다.</div>'; }
         } else {
             rankList.innerHTML = `
                 <div class="ranking-item"><span>1등. 1반 26번</span><span>1400점</span></div>
                 <div class="ranking-item"><span>2등. 3반 12번</span><span>1200점</span></div>
-                <div style="text-align:center; padding: 10px; font-size:12px; color:#7f8c8d;">(GAS URL이 입력되지 않은 데모 상태입니다.)</div>
+                <div style="text-align:center; padding: 5px; font-size:12px; color:#7f8c8d;">(데모 상태)</div>
             `;
         }
     }
