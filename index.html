@@ -496,12 +496,12 @@
     let currentQ = 0;
     let currentOptionsIndices = [];
     
-    // 몬스터 정보 (스테이지별) - 스테이지 3 드래곤 maxHp를 25에서 22로 변경
+    // 몬스터 정보 (스테이지별)
     const stageInfo = [
         {}, // 0인덱스 무시
         { name: '슬라임', lvl: 1, maxHp: 12, svg: '#svg-slime', qType: 'idiom_complete' }, // Stage 1
-        { name: '오크', lvl: 5, maxHp: 20, svg: '#svg-orc', qType: 'meaning' }, // Stage 2
-        { name: '보스 드래곤', lvl: 99, maxHp: 22, svg: '#svg-dragon', qType: 'situation' } // Stage 3
+        { name: '오크', lvl: 5, maxHp: 18, svg: '#svg-orc', qType: 'meaning' }, // Stage 2
+        { name: '보스 드래곤', lvl: 99, maxHp: 20, svg: '#svg-dragon', qType: 'situation' } // Stage 3
     ];
     let monster = { hp: 15, maxHp: 15, name: '', svg: '' };
 
